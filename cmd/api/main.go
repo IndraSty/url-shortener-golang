@@ -7,8 +7,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/IndraSty/url-shortener/config"
-	"github.com/IndraSty/url-shortener/pkg/logger"
+	"github.com/IndraSty/url-shortener-golang/config"
+	"github.com/IndraSty/url-shortener-golang/pkg/logger"
 )
 
 // @title           URL Shortener API
@@ -31,41 +31,44 @@ import (
 // @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
-	// Load config
+	// Load and validate config — fail fast if required env vars are missing
 	cfg, err := config.Load()
 	if err != nil {
-		// Can't use logger yet, fall back to stderr
-		os.Stderr.WriteString("failed to load config: " + err.Error() + "\n")
+		os.Stderr.WriteString("FATAL: " + err.Error() + "\n")
 		os.Exit(1)
 	}
 
-	// Initialize logger
+	// Initialize structured logger
 	log := logger.New(cfg.App.Env)
-	log.Info().Str("env", cfg.App.Env).Str("port", cfg.App.Port).Msg("starting url-shortener")
 
-	// Graceful shutdown context
+	log.Info().
+		Str("env", cfg.App.Env).
+		Str("port", cfg.App.Port).
+		Str("base_url", cfg.App.BaseURL).
+		Msg("configuration loaded successfully")
+
+	// Root context — cancelled on shutdown signal
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Wait for interrupt signal
+	// Listen for OS signals
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
-	// TODO: wire up server in Stage 2+
-	// For now, block until signal received
-	log.Info().Msg("server ready (wiring up in next stages)")
+	// TODO: wire up DB, Redis, router in Stage 3+
+	log.Info().Msg("server initialized — wiring continues in next stages")
 
 	select {
 	case sig := <-quit:
-		log.Info().Str("signal", sig.String()).Msg("shutting down gracefully")
+		log.Info().Str("signal", sig.String()).Msg("shutdown signal received")
 		cancel()
 	case <-ctx.Done():
 	}
 
-	// Give in-flight requests 10s to finish
+	// Allow 10s for graceful shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
 	_ = shutdownCtx
 
-	log.Info().Msg("server stopped")
+	log.Info().Msg("server stopped cleanly")
 }
