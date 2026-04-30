@@ -19,8 +19,8 @@ func TestEncodeDecode(t *testing.T) {
 		{61, "Z"},
 		{62, "10"},
 		{100000, "q0U"},
-		{9999999, "FXqX"},
-		{1<<32 - 1, "4gfFC3"},
+		{9999999, "FXsj"},
+		{1<<32 - 1, "4GFfc3"},
 	}
 
 	for _, tc := range cases {
