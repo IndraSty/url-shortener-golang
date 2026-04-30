@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/IndraSty/url-shortener-golang/internal/domain"
+	"github.com/IndraSty/url-shortener-golang/pkg/metrics"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -78,6 +79,7 @@ func (r *cacheRepository) GetLink(ctx context.Context, slug string) (*domain.Lin
 	if err != nil {
 		// Cache miss is not an error — caller falls back to PostgreSQL
 		if errors.Is(err, redis.Nil) {
+			metrics.CacheMissesTotal.Inc()
 			return nil, nil
 		}
 		return nil, fmt.Errorf("cacheRepository.GetLink: %w", err)
@@ -86,9 +88,11 @@ func (r *cacheRepository) GetLink(ctx context.Context, slug string) (*domain.Lin
 	var cached cachedLink
 	if err := json.Unmarshal(data, &cached); err != nil {
 		// Corrupted cache entry — treat as miss, let it get refreshed
+		metrics.CacheMissesTotal.Inc()
 		return nil, nil
 	}
 
+	metrics.CacheHitsTotal.Inc()
 	return toDomainLink(cached), nil
 }
 
