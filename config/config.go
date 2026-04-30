@@ -15,6 +15,7 @@ type Config struct {
 	Redis    RedisConfig
 	JWT      JWTConfig
 	QStash   QStashConfig
+	Grafana  GrafanaConfig
 }
 
 type AppConfig struct {
@@ -49,6 +50,14 @@ type QStashConfig struct {
 	CurrentKey string
 	NextKey    string
 	URL        string
+}
+
+// this is for the remote write metrics to Grafana Cloud. We keep it in the main config for simplicity,
+// you can delete it if you don't need the Grafana integration.
+type GrafanaConfig struct {
+	RemoteWriteURL string
+	Username       string
+	APIKey         string
 }
 
 // Load reads config from .env file and environment variables.
@@ -96,6 +105,11 @@ func Load() (*Config, error) {
 			CurrentKey: viper.GetString("QSTASH_CURRENT_SIGNING_KEY"),
 			NextKey:    viper.GetString("QSTASH_NEXT_SIGNING_KEY"),
 			URL:        viper.GetString("QSTASH_URL"),
+		},
+		Grafana: GrafanaConfig{
+			RemoteWriteURL: viper.GetString("GRAFANA_REMOTE_WRITE_URL"),
+			Username:       viper.GetString("GRAFANA_USERNAME"),
+			APIKey:         viper.GetString("GRAFANA_API_KEY"),
 		},
 	}
 
