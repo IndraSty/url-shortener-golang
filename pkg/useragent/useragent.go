@@ -130,6 +130,17 @@ func StripReferrer(referrer string) string {
 		return ""
 	}
 
+	var rest string
+	switch {
+	case strings.HasPrefix(referrer, "https://"):
+		rest = referrer[len("https://"):]
+	case strings.HasPrefix(referrer, "http://"):
+		rest = referrer[len("http://"):]
+	default:
+		// Reject non-HTTP schemes: android-app://, ftp://, etc.
+		return ""
+	}
+
 	// Remove scheme
 	s := referrer
 	if idx := strings.Index(s, "://"); idx != -1 {
@@ -140,17 +151,17 @@ func StripReferrer(referrer string) string {
 	}
 
 	// Remove path and everything after
-	if idx := strings.Index(s, "/"); idx != -1 {
-		s = s[:idx]
+	if idx := strings.Index(rest, "/"); idx != -1 {
+		rest = rest[:idx]
 	}
 
 	// Remove port
-	if idx := strings.LastIndex(s, ":"); idx != -1 {
-		s = s[:idx]
+	if idx := strings.LastIndex(rest, ":"); idx != -1 {
+		rest = rest[:idx]
 	}
 
 	// Remove www. prefix for normalization
-	s = strings.TrimPrefix(s, "www.")
+	rest = strings.TrimPrefix(rest, "www.")
 
-	return strings.ToLower(s)
+	return strings.ToLower(rest)
 }
