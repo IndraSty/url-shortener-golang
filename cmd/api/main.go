@@ -17,6 +17,7 @@ import (
 	"github.com/IndraSty/url-shortener-golang/internal/worker"
 	"github.com/IndraSty/url-shortener-golang/pkg/geoip"
 	"github.com/IndraSty/url-shortener-golang/pkg/logger"
+	"github.com/IndraSty/url-shortener-golang/pkg/metrics"
 	"github.com/IndraSty/url-shortener-golang/pkg/qrcode"
 )
 
@@ -163,6 +164,8 @@ func main() {
 		AnalyticsUsecase: analyticsUsecase,
 		CacheRepo:        cacheRepo,
 		Log:              log,
+		DB:               dbPool,
+		RedisClient:      redisClient,
 	})
 
 	// =========================================================================
@@ -185,10 +188,33 @@ func main() {
 	if cfg.QStash.Token == "" {
 		log.Info().Msg("QStash not configured — using in-process analytics worker")
 		go analyticsWorker.Start(workerCtx)
+		go func() {
+			ticker := time.NewTicker(10 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					metrics.AnalyticsQueueDepth.Set(
+						float64(analyticsWorker.QueueDepth()),
+					)
+				case <-workerCtx.Done():
+					return
+				}
+			}
+		}()
 	} else {
 		log.Info().Msg("QStash configured — analytics worker disabled (using push mode)")
 		workerCancel() // cancel immediately, worker not needed
 	}
+
+	// Start Grafana remote write
+	go metrics.StartRemoteWrite(
+		workerCtx,
+		cfg.Grafana.RemoteWriteURL,
+		cfg.Grafana.Username,
+		cfg.Grafana.APIKey,
+		log,
+	)
 
 	// Start HTTP server
 	serverErr := make(chan error, 1)
