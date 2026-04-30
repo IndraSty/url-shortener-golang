@@ -4,13 +4,18 @@ import (
 	"net/http"
 
 	"github.com/IndraSty/url-shortener-golang/config"
+	_ "github.com/IndraSty/url-shortener-golang/docs"
 	"github.com/IndraSty/url-shortener-golang/internal/delivery/http/handler"
 	"github.com/IndraSty/url-shortener-golang/internal/delivery/http/middleware"
 	"github.com/IndraSty/url-shortener-golang/internal/domain"
 	"github.com/IndraSty/url-shortener-golang/pkg/logger"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
+	echoswagger "github.com/swaggo/echo-swagger"
 )
 
 // RouterDeps holds all dependencies needed to wire the HTTP router.
@@ -23,6 +28,8 @@ type RouterDeps struct {
 	AnalyticsUsecase domain.AnalyticsUsecase
 	CacheRepo        domain.CacheRepository
 	Log              zerolog.Logger
+	DB               *pgxpool.Pool
+	RedisClient      *redis.Client
 }
 
 // NewRouter creates and configures the Echo instance with all routes and middleware.
@@ -47,6 +54,9 @@ func NewRouter(deps RouterDeps) *echo.Echo {
 	// Security headers on every response
 	e.Use(middleware.SecurityHeaders())
 
+	// Prometheus metrics for all requests
+	e.Use(middleware.PrometheusMiddleware())
+
 	// Recover from panics — never crash the server on a bug
 	e.Use(echomiddleware.Recover())
 
@@ -67,12 +77,26 @@ func NewRouter(deps RouterDeps) *echo.Echo {
 	// Public routes — no authentication required
 	// -------------------------------------------------------------------------
 
+	// Health handler
+	healthHandler := handler.NewHealthHandler(deps.DB, deps.RedisClient)
+
 	// Health check — used by Fly.io and Prometheus
 	e.GET("/health", healthCheck)
+	e.GET("/livez", healthHandler.Liveness)
+	e.GET("/readyz", healthHandler.Readiness)
+
+	// Metrics endpoint — Prometheus scrapes this
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+
+	// Swagger UI — disabled in production
+	if !deps.Config.IsProd() {
+		e.GET("/swagger/*", echoswagger.WrapHandler)
+	}
 
 	// Redirect — the hot path, rate limited per IP
 	redirectGroup := e.Group("")
 	redirectGroup.Use(middleware.RedirectRateLimiter(deps.CacheRepo, 60))
+	redirectGroup.Use(middleware.RedirectMetricsMiddleware())
 	redirectGroup.GET("/:slug", redirectHandler.Redirect)
 	redirectGroup.POST("/:slug/unlock", redirectHandler.UnlockWithPassword)
 
