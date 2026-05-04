@@ -1,0 +1,39 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: true
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - noctx
+    - bodyclose
+    - exhaustive
+  settings:
+    misspell:
+      locale: US
+    exhaustive:
+      default-signifies-exhaustive: true
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - godot
+      - path: docs/
+        linters:
+          - all
+      - path: internal/mocks/
+        linters:
+          - unused
