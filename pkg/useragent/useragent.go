@@ -143,8 +143,8 @@ func StripReferrer(referrer string) string {
 
 	// Remove scheme
 	s := referrer
-	if idx := strings.Index(s, "://"); idx != -1 {
-		s = s[idx+3:]
+	if _, after, ok := strings.Cut(s, "://"); ok {
+		_ = after
 	} else {
 		// No scheme — not a standard HTTP referrer
 		return ""
