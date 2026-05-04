@@ -169,7 +169,7 @@ func (u *redirectUsecase) PublishClickEvent(ctx context.Context, payload domain.
 		// Non-fatal — analytics loss is acceptable, redirect already sent
 		return fmt.Errorf("redirectUsecase.PublishClickEvent http: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("redirectUsecase.PublishClickEvent qstash status: %d", resp.StatusCode)

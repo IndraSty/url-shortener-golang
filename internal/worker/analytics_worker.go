@@ -66,7 +66,7 @@ func (w *AnalyticsWorker) Enqueue(payload domain.ClickEventPayload) {
 }
 
 // Start launches N worker goroutines that drain the queue.
-// Blocks until ctx is cancelled, then drains remaining events with a 5s timeout.
+// Blocks until ctx is canceled, then drains remaining events with a 5s timeout.
 func (w *AnalyticsWorker) Start(ctx context.Context) {
 	w.log.Info().
 		Int("concurrency", w.concurrency).
@@ -109,7 +109,7 @@ func (w *AnalyticsWorker) Start(ctx context.Context) {
 	}
 }
 
-// consume reads from the queue and processes events until ctx is cancelled
+// consume reads from the queue and processes events until ctx is canceled
 // or the queue is closed.
 func (w *AnalyticsWorker) consume(ctx context.Context, workerID int) {
 	log := w.log.With().Int("worker_id", workerID).Logger()
@@ -127,7 +127,7 @@ func (w *AnalyticsWorker) consume(ctx context.Context, workerID int) {
 
 		cancel()
 
-		// Check if parent context was cancelled between events
+		// Check if parent context was canceled between events
 		select {
 		case <-ctx.Done():
 			return

@@ -46,7 +46,9 @@ func main() {
 	// =========================================================================
 	cfg, err := config.Load()
 	if err != nil {
-		os.Stderr.WriteString("FATAL: " + err.Error() + "\n")
+		if _, errWrite := os.Stderr.WriteString("FATAL: " + err.Error() + "\n"); errWrite != nil {
+			fmt.Printf("FATAL: %s\n", err.Error())
+		}
 		os.Exit(1)
 	}
 

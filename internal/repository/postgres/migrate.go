@@ -19,7 +19,7 @@ func RunMigrations(databaseURL, migrationsPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize migrator: %w", err)
 	}
-	defer m.Close()
+	defer func() { _, _ = m.Close() }()
 
 	if err := m.Up(); err != nil {
 		// ErrNoChange means all migrations already applied — not an error

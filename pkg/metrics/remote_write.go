@@ -58,7 +58,7 @@ func pushMetrics(
 
 	// Encode as Prometheus text format
 	var buf bytes.Buffer
-	enc := expfmt.NewEncoder(&buf, expfmt.FmtText)
+	enc := expfmt.NewEncoder(&buf, expfmt.NewFormat(expfmt.TypeTextPlain))
 	for _, mf := range mfs {
 		if err := enc.Encode(mf); err != nil {
 			return fmt.Errorf("encode metrics: %w", err)
@@ -72,13 +72,13 @@ func pushMetrics(
 	}
 
 	req.SetBasicAuth(username, apiKey)
-	req.Header.Set("Content-Type", string(expfmt.FmtText))
+	req.Header.Set("Content-Type", string(expfmt.NewFormat(expfmt.TypeTextPlain)))
 
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("push request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("grafana returned status %d", resp.StatusCode)

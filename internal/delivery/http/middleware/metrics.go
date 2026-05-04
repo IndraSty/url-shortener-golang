@@ -92,10 +92,10 @@ func classifyRedirectResult(status int, err error) string {
 		return "error"
 	}
 
-	switch {
-	case status == http.StatusMovedPermanently:
+	switch status {
+	case http.StatusMovedPermanently:
 		return "redirect_301"
-	case status == http.StatusFound:
+	case http.StatusFound:
 		return "redirect_302"
 	default:
 		return "other"
