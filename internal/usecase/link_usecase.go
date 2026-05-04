@@ -108,15 +108,15 @@ func (u *linkUsecase) Create(ctx context.Context, input domain.CreateLinkInput) 
 
 // updateSlugDirect updates only the slug field — called after ID is known.
 // We keep this internal to the usecase, not exposed via repository interface.
-func (u *linkUsecase) updateSlugDirect(ctx context.Context, id int64, slug string) error {
-	_, err := u.linkRepo.Update(ctx, id, domain.UpdateLinkInput{})
-	if err != nil {
-		return err
-	}
-	// We need direct slug update — add it to UpdateLinkInput
-	// For now we'll handle this via a direct method
-	return nil
-}
+// func (u *linkUsecase) updateSlugDirect(ctx context.Context, id int64, slug string) error {
+// 	_, err := u.linkRepo.Update(ctx, id, domain.UpdateLinkInput{})
+// 	if err != nil {
+// 		return err
+// 	}
+// 	// We need direct slug update — add it to UpdateLinkInput
+// 	// For now we'll handle this via a direct method
+// 	return nil
+// }
 
 func (u *linkUsecase) GetByID(ctx context.Context, id int64, userID string) (*domain.Link, error) {
 	link, err := u.linkRepo.FindByID(ctx, id)

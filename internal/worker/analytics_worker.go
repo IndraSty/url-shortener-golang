@@ -171,10 +171,10 @@ func (w *AnalyticsWorker) Validate() error {
 }
 
 // logEvent is a helper that logs a processed event at debug level.
-func (w *AnalyticsWorker) logEvent(log zerolog.Logger, payload domain.ClickEventPayload) {
-	log.Debug().
-		Int64("link_id", payload.LinkID).
-		Str("ip", payload.IPAddress).
-		Str("ua", payload.UserAgent).
-		Msg("click event processed")
-}
+// func (w *AnalyticsWorker) logEvent(log zerolog.Logger, payload domain.ClickEventPayload) {
+// 	log.Debug().
+// 		Int64("link_id", payload.LinkID).
+// 		Str("ip", payload.IPAddress).
+// 		Str("ua", payload.UserAgent).
+// 		Msg("click event processed")
+// }

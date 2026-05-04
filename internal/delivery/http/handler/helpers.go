@@ -15,6 +15,8 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
+var _ = errorResponse{}
+
 // bindAndValidate binds the request body and runs struct validation.
 // Returns a 400 HTTPError with a descriptive message on failure.
 func bindAndValidate(c echo.Context, req interface{}) error {
