@@ -19,9 +19,10 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Env     string
-	Port    string
-	BaseURL string
+	Env         string
+	Port        string
+	BaseURL     string
+	CORSOrigins []string
 }
 
 type DatabaseConfig struct {
@@ -78,9 +79,10 @@ func Load() (*Config, error) {
 
 	cfg := &Config{
 		App: AppConfig{
-			Env:     viper.GetString("APP_ENV"),
-			Port:    viper.GetString("APP_PORT"),
-			BaseURL: viper.GetString("BASE_URL"),
+			Env:         viper.GetString("APP_ENV"),
+			Port:        viper.GetString("APP_PORT"),
+			BaseURL:     viper.GetString("BASE_URL"),
+			CORSOrigins: parseCORSOrigins(viper.GetString("CORS_ALLOWED_ORIGINS")),
 		},
 		Database: DatabaseConfig{
 			URL:             viper.GetString("DATABASE_URL"),
@@ -166,4 +168,19 @@ func setDefaults() {
 
 	viper.SetDefault("JWT_ACCESS_EXPIRY", "15m")
 	viper.SetDefault("JWT_REFRESH_EXPIRY", "168h")
+}
+
+func parseCORSOrigins(raw string) []string {
+	if raw == "" {
+		return []string{"http://localhost:3000"}
+	}
+
+	var origins []string
+	for _, o := range strings.Split(raw, ",") {
+		o = strings.TrimSpace(o)
+		if o != "" {
+			origins = append(origins, o)
+		}
+	}
+	return origins
 }

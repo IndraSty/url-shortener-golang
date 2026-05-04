@@ -48,6 +48,25 @@ func NewRouter(deps RouterDeps) *echo.Echo {
 	// Request ID — generates X-Request-ID for tracing
 	e.Use(echomiddleware.RequestID())
 
+	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
+		AllowOrigins: deps.Config.App.CORSOrigins,
+		AllowMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPatch,
+			http.MethodDelete,
+			http.MethodOptions,
+		},
+		AllowHeaders: []string{
+			echo.HeaderContentType,
+			echo.HeaderAuthorization,
+			"X-API-Key",
+			echo.HeaderXRequestID,
+		},
+		AllowCredentials: false,
+		MaxAge:           86400,
+	}))
+
 	// Structured request logger — attaches zerolog to Echo context
 	e.Use(logger.EchoMiddleware(deps.Log))
 
