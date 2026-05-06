@@ -42,46 +42,7 @@
 
 ### System Overview
 
-```
-                                ┌─────────────────────────────────────────────┐
-                                │                  CLIENT                      │
-                                │         Browser / Mobile / API               │
-                                └──────────────────┬──────────────────────────┘
-                                                   │ HTTPS
-                                                   ▼
-                                ┌─────────────────────────────────────────────┐
-                                │              FLY.IO EDGE                     │
-                                │         TLS Termination + Anycast            │
-                                │           Primary Region: sin (SG)           │
-                                └──────────────────┬──────────────────────────┘
-                                                   │
-                                                   ▼
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                            ECHO HTTP SERVER                                   │
-│                                                                               │
-│  ┌─────────────────┐  ┌──────────────────┐  ┌──────────────────────────────┐ │
-│  │  Global         │  │  Auth Middleware  │  │  Rate Limit Middleware        │ │
-│  │  Middleware     │  │  JWT / API Key   │  │  Per-IP (redirect)            │ │
-│  │  RequestID      │  │  AnyAuthMiddle-  │  │  Per-User (management API)    │ │
-│  │  Logger         │  │  ware            │  │  Redis sliding window         │ │
-│  │  Security Hdrs  │  │                  │  │                               │ │
-│  │  Prometheus     │  └──────────────────┘  └──────────────────────────────┘ │
-│  └─────────────────┘                                                          │
-│                                                                               │
-│  ┌────────────────────────────────────────────────────────────────────────┐   │
-│  │                           ROUTER                                        │   │
-│  │                                                                         │   │
-│  │  GET  /:slug          →  RedirectHandler    (rate limited, no auth)     │   │
-│  │  POST /:slug/unlock   →  RedirectHandler    (password unlock)           │   │
-│  │  POST /api/v1/auth/*  →  AuthHandler        (register, login)          │   │
-│  │  ANY  /api/v1/links/* →  LinkHandler        (CRUD + QR + AB + Geo)     │   │
-│  │  GET  /api/v1/.../analytics →  AnalyticsHandler                        │   │
-│  │  POST /internal/analytics/ingest → WorkerHandler (QStash callback)     │   │
-│  │  GET  /health  /livez  /readyz  →  HealthHandler                       │   │
-│  │  GET  /metrics         →  Prometheus Handler                            │   │
-│  └────────────────────────────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+![System overflow image](https://github.com/IndraSty/url-shortener-golang/blob/main/system-overflow.png)
 
 ---
 
